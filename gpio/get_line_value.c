@@ -25,7 +25,7 @@ static struct gpiod_line_request *chip_request_input(struct gpiod_chip *chip,
 		return request;
 
 	gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_INPUT);
-    //gpiod_line_settings_set_bias(settings, GPIOD_LINE_BIAS_PULL_UP);
+    gpiod_line_settings_set_bias(settings, GPIOD_LINE_BIAS_PULL_UP);
 
 	struct gpiod_line_config *line_cfg = gpiod_line_config_new();
 	if (!line_cfg)
