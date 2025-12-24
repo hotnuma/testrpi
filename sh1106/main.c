@@ -4,13 +4,13 @@
 #include "ss_oled.h"
 #include <stdio.h>
 
-// data structure for OLED object
-SSOLED ssoled;
+// data structure for oled object
+SSOLED oled;
 unsigned char ucBackBuf[1024];
 
 int main()
 {
-    int ret = oled_init(&ssoled, 1,
+    int ret = oled_init(&oled, 1,
                      OLED_SH1106_3C, OLED_128x64, 0x3c,
                      0, 0);
 
@@ -22,29 +22,25 @@ int main()
         return 1;
     }
     
-    char *msgs[] = {(char *) "SSD1306 @ 0x3C",
-                    (char *) "SSD1306 @ 0x3D",
-                    (char *) "SH1106 @ 0x3C",
-                    (char *) "SH1106 @ 0x3D"};
-                    
-    oled_set_backbuffer(&ssoled, ucBackBuf);
+    oled_set_backbuffer(&oled, ucBackBuf);
     
     // fill with black
-    oled_fill(&ssoled, 0, 1);
-    oled_string_write(&ssoled, 0, 0, 0, msgs[ret], FONT_NORMAL, 0, 1);
-    oled_string_write(&ssoled, 0, 0, 1, "SS_OLED Library!", FONT_NORMAL, 0, 1);
-    oled_string_write(&ssoled, 0, 3, 2, "BIG!", FONT_LARGE, 0, 1);
-    oled_string_write(&ssoled, 0, 0, 5, "Small", FONT_SMALL, 0, 1);
+    oled_fill(&oled, 0, 1);
+
+    oled_string_write(&oled, 0, 0, 0, "Line 1", FONT_NORMAL, 0, 1);
+    oled_string_write(&oled, 0, 0, 1, "SS_OLED Library!", FONT_NORMAL, 0, 1);
+    //oled_string_write(&oled, 0, 3, 2, "BIG!", FONT_LARGE, 0, 1);
+    //oled_string_write(&oled, 0, 0, 5, "Small", FONT_SMALL, 0, 1);
     
-    for (int i = 0; i < 64; ++i)
-    {
-        oled_set_pixel(&ssoled, i, 16+i, 1, 1);
-        oled_set_pixel(&ssoled, 127-i, 16+i, 1, 1);
-    }
+    // for (int i = 0; i < 64; ++i)
+    // {
+    //     oled_set_pixel(&oled, i, 16+i, 1, 1);
+    //     oled_set_pixel(&oled, 127-i, 16+i, 1, 1);
+    // }
     
     printf("Press ENTER to quit\n");
     getchar();
-    oled_power(&ssoled, 0);
+    oled_power(&oled, 0);
 
     return 0;
 }
