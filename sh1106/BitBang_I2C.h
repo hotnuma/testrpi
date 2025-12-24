@@ -22,10 +22,6 @@
 
 typedef struct mybbi2c
 {
-    //~ unsigned char iSDA, iSCL; // pin numbers (0xff = disabled)
-    //~ unsigned char bWire, bAlign; // use the Wire library
-    //~ unsigned char iSDABit, iSCLBit; // bit numbers of the ports
-    //~ unsigned int iDelay;
     int file_i2c;
     int iBus;
 } BBI2C;

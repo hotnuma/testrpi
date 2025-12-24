@@ -7,10 +7,14 @@
 typedef struct ssoleds
 {
     uint8_t oled_addr; // requested address or 0xff for automatic detection
-    uint8_t oled_wrap, oled_flip, oled_type;
+    uint8_t oled_wrap;
+    uint8_t oled_flip;
+    uint8_t oled_res;
     uint8_t *ucScreen;
-    uint8_t iCursorX, iCursorY;
-    uint8_t oled_x, oled_y;
+    uint8_t iCursorX;
+    uint8_t iCursorY;
+    uint8_t oled_x;
+    uint8_t oled_y;
     int iScreenOffset;
     BBI2C bbi2c;
 } SSOLED;
@@ -78,8 +82,8 @@ enum {
 // Otherwise use the Wire library.
 // If you don't need to use a separate reset pin, set it to -1
 //
-int oledInit(SSOLED *pOLED, int iType, int iAddr,
-             int bFlip, int bInvert, int iChannel, int reset);
+int oledInit(SSOLED *pOLED, int iChannel, int iType, int iRes, int iAddr,
+             int bFlip, int bInvert, int reset);
 
 // Initialize an SPI version of the display
 //

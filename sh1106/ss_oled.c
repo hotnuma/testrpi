@@ -617,13 +617,14 @@ static void _I2CWrite(SSOLED *pOLED, unsigned char *pData, int iLen)
 //
 // Initializes the OLED controller into "page mode"
 //
-int oledInit(SSOLED *pOLED, int iType, int iAddr, int bFlip, int bInvert, int iChannel, int reset)
+int oledInit(SSOLED *pOLED, int iChannel, int iType, int iRes, int iAddr,
+             int bFlip, int bInvert, int reset)
 {
     unsigned char uc[4];
-    int rc = OLED_NOT_FOUND;
+    //int iType = OLED_NOT_FOUND;
 
     pOLED->ucScreen = NULL; // reset backbuffer; user must provide one later
-    pOLED->oled_type = iType;
+    pOLED->oled_res = iRes;
     pOLED->oled_flip = bFlip;
     pOLED->oled_wrap = 0; // default - disable text wrap
     pOLED->bbi2c.iBus = iChannel; // bus number
@@ -643,14 +644,14 @@ int oledInit(SSOLED *pOLED, int iType, int iAddr, int bFlip, int bInvert, int iC
         else if (I2CTest(&pOLED->bbi2c, 0x3d))
             pOLED->oled_addr = 0x3d;
         else
-            return rc; // no display found!
+            return iType; // no display found!
     }
     else
     {
         pOLED->oled_addr = iAddr;
         I2CTest(&pOLED->bbi2c, iAddr);
         if (!I2CTest(&pOLED->bbi2c, iAddr))
-            return rc; // no display found
+            return iType; // no display found
     }
     
     // Detect the display controller (SSD1306, SH1107 or SH1106)
@@ -676,17 +677,18 @@ int oledInit(SSOLED *pOLED, int iType, int iAddr, int bFlip, int bInvert, int iC
     }
 #endif
 
-    rc = OLED_SH1106_3C;
-    pOLED->oled_type = OLED_132x64;
+    // SH1106 is 128 centered in 132
+    if (iType == OLED_SH1106_3C)
+        pOLED->oled_res = OLED_132x64;
 
     if (pOLED->oled_addr == 0x3d)
-        rc++; // return the '3D' version of the type
+        iType++; // return the '3D' version of the type
 
-    if (iType == OLED_128x32 || iType == OLED_96x16)
+    if (iRes == OLED_128x32 || iRes == OLED_96x16)
         _I2CWrite(pOLED,(unsigned char *)oled32_initbuf, sizeof(oled32_initbuf));
-    else if (iType == OLED_128x128)
+    else if (iRes == OLED_128x128)
         _I2CWrite(pOLED,(unsigned char *)oled128_initbuf, sizeof(oled128_initbuf));
-    else if (iType == OLED_72x40)
+    else if (iRes == OLED_72x40)
         _I2CWrite(pOLED,(unsigned char *)oled72_initbuf, sizeof(oled72_initbuf));
     else // 132x64, 128x64 and 64x32
         _I2CWrite(pOLED,(unsigned char *)oled64_initbuf, sizeof(oled64_initbuf));
@@ -707,27 +709,27 @@ int oledInit(SSOLED *pOLED, int iType, int iAddr, int bFlip, int bInvert, int iC
     }
     pOLED->oled_x = 128; // assume 128x64
     pOLED->oled_y = 64;
-    if (iType == OLED_96x16)
+    if (iRes == OLED_96x16)
     {
         pOLED->oled_x = 96;
         pOLED->oled_y = 16;
     }
-    else if (iType == OLED_128x32)
+    else if (iRes == OLED_128x32)
         pOLED->oled_y = 32;
-    else if (iType == OLED_128x128)
+    else if (iRes == OLED_128x128)
         pOLED->oled_y = 128;
-    else if (iType == OLED_64x32)
+    else if (iRes == OLED_64x32)
     {
         pOLED->oled_x = 64;
         pOLED->oled_y = 32;
     }
-    else if (iType == OLED_72x40)
+    else if (iRes == OLED_72x40)
     {
         pOLED->oled_x = 72;
         pOLED->oled_y = 40;
     }
     
-    return rc;
+    return iType;
 }
 
 //
@@ -831,24 +833,24 @@ unsigned char buf[4];
   pOLED->iScreenOffset = (y*128)+x;
   if (!bRender)
       return; // don't send the commands to the OLED if we're not rendering the graphics now
-  if (pOLED->oled_type == OLED_64x32) // visible display starts at column 32, row 4
+  if (pOLED->oled_res == OLED_64x32) // visible display starts at column 32, row 4
   {
     x += 32; // display is centered in VRAM, so this is always true
     if (pOLED->oled_flip == 0) // non-flipped display starts from line 4
        y += 4;
   }
-  else if (pOLED->oled_type == OLED_132x64) // SH1106 has 128 pixels centered in 132
+  else if (pOLED->oled_res == OLED_132x64) // SH1106 has 128 pixels centered in 132
   {
     x += 2;
   }
-  else if (pOLED->oled_type == OLED_96x16) // visible display starts at line 2
+  else if (pOLED->oled_res == OLED_96x16) // visible display starts at line 2
   { // mapping is a bit strange on the 96x16 OLED
     if (pOLED->oled_flip)
       x += 32;
     else
       y += 2;
   }
-  else if (pOLED->oled_type == OLED_72x40) // starts at x=28,y=3
+  else if (pOLED->oled_res == OLED_72x40) // starts at x=28,y=3
   {
     x += 28;
     if (!pOLED->oled_flip)
@@ -1226,7 +1228,7 @@ unsigned char uc, ucOld;
 
   if (pOLED->ucScreen)
     uc = ucOld = pOLED->ucScreen[i];
-  else if (pOLED->oled_type == OLED_132x64 || pOLED->oled_type == OLED_128x128) // SH1106/SH1107 can read data
+  else if (pOLED->oled_res == OLED_132x64 || pOLED->oled_res == OLED_128x128) // SH1106/SH1107 can read data
   {
     uint8_t ucTemp[3];
      ucTemp[0] = 0x80; // one command
@@ -1254,7 +1256,7 @@ unsigned char uc, ucOld;
       oledWriteDataBlock(pOLED, &uc, 1, bRender);
       pOLED->ucScreen[i] = uc;
     }
-    else if (pOLED->oled_type == OLED_132x64 || pOLED->oled_type == OLED_128x128) // end the read_modify_write operation
+    else if (pOLED->oled_res == OLED_132x64 || pOLED->oled_res == OLED_128x128) // end the read_modify_write operation
     {
       uint8_t ucTemp[4];
       ucTemp[0] = 0xc0; // one data
@@ -1761,7 +1763,7 @@ unsigned char temp[16];
       oledWriteDataBlock(pOLED, temp, 16, bRender);
     } // for x
     // 72 isn't evenly divisible by 16, so fix it
-    if (pOLED->oled_type == OLED_72x40)
+    if (pOLED->oled_res == OLED_72x40)
        oledWriteDataBlock(pOLED, temp, 8, bRender);
   } // for y
   if (pOLED->ucScreen)
