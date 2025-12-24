@@ -15,7 +15,6 @@ c_args = [
 ]
 
 app_sources = [
-    'BitBang_I2C.c',
     'ss_oled.c',
     'main.c',
 ]

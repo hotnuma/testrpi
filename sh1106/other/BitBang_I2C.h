@@ -20,18 +20,12 @@
 #ifndef __BITBANG_I2C__
 #define __BITBANG_I2C__
 
-typedef struct mybbi2c
-{
-    int file_i2c;
-    int iBus;
-} BBI2C;
-
-void I2CInit(BBI2C *pI2C);
-unsigned char I2CTest(BBI2C *pI2C, unsigned char addr);
-int I2CWrite(BBI2C *pI2C, unsigned char iAddr, unsigned char *pData, int iLen);
-int I2CReadRegister(BBI2C *pI2C, unsigned char iAddr,
-                    unsigned char u8Register, unsigned char *pData, int iLen);
-int I2CRead(BBI2C *pI2C, unsigned char iAddr, unsigned char *pData, int iLen);
+int i2c_init(int channel);
+unsigned char i2c_test(int file_i2c, unsigned char addr);
+int i2c_write(int file_i2c, unsigned char iAddr, unsigned char *pData, int iLen);
+// int I2CReadRegister(int file_i2c, unsigned char iAddr,
+//                     unsigned char u8Register, unsigned char *pData, int iLen);
+int I2CRead(int file_i2c, unsigned char iAddr, unsigned char *pData, int iLen);
 
 #endif //__BITBANG_I2C__
 

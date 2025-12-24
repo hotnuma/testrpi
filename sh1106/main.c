@@ -10,9 +10,9 @@ unsigned char ucBackBuf[1024];
 
 int main()
 {
-    int ret = oledInit(&ssoled, 1,
+    int ret = oled_init(&ssoled, 1,
                      OLED_SH1106_3C, OLED_128x64, 0x3c,
-                     0, 0, -1);
+                     0, 0);
 
     if (ret == OLED_NOT_FOUND)
     {
@@ -27,24 +27,24 @@ int main()
                     (char *) "SH1106 @ 0x3C",
                     (char *) "SH1106 @ 0x3D"};
                     
-    oledSetBackBuffer(&ssoled, ucBackBuf);
+    oled_set_backbuffer(&ssoled, ucBackBuf);
     
     // fill with black
-    oledFill(&ssoled, 0, 1);
-    oledWriteString(&ssoled, 0, 0, 0, msgs[ret], FONT_NORMAL, 0, 1);
-    oledWriteString(&ssoled, 0, 0, 1, "SS_OLED Library!", FONT_NORMAL, 0, 1);
-    oledWriteString(&ssoled, 0, 3, 2, "BIG!", FONT_LARGE, 0, 1);
-    oledWriteString(&ssoled, 0, 0, 5, "Small", FONT_SMALL, 0, 1);
+    oled_fill(&ssoled, 0, 1);
+    oled_string_write(&ssoled, 0, 0, 0, msgs[ret], FONT_NORMAL, 0, 1);
+    oled_string_write(&ssoled, 0, 0, 1, "SS_OLED Library!", FONT_NORMAL, 0, 1);
+    oled_string_write(&ssoled, 0, 3, 2, "BIG!", FONT_LARGE, 0, 1);
+    oled_string_write(&ssoled, 0, 0, 5, "Small", FONT_SMALL, 0, 1);
     
     for (int i = 0; i < 64; ++i)
     {
-        oledSetPixel(&ssoled, i, 16+i, 1, 1);
-        oledSetPixel(&ssoled, 127-i, 16+i, 1, 1);
+        oled_set_pixel(&ssoled, i, 16+i, 1, 1);
+        oled_set_pixel(&ssoled, 127-i, 16+i, 1, 1);
     }
     
     printf("Press ENTER to quit\n");
     getchar();
-    oledPower(&ssoled, 0);
+    oled_power(&ssoled, 0);
 
     return 0;
 }

@@ -8,11 +8,10 @@ PKGCONFIG =
 #PKGCONFIG += tinyc
 
 HEADERS += \
-    BitBang_I2C.h \
+    global.h \
     ss_oled.h \
 
 SOURCES = \
-    BitBang_I2C.c \
     main.c \
     ss_oled.c
 
