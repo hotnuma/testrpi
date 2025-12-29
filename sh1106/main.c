@@ -10,11 +10,9 @@ unsigned char ucBackBuf[1024];
 
 int main()
 {
-    int ret = oled_init(&oled, 1,
-                     OLED_SH1106_3C, OLED_128x64, 0x3c,
-                     0, 0);
-
-    if (ret == OLED_NOT_FOUND)
+    if (oled_init(&oled, 1, 0x3c,
+                  OLED_SH1106_3C, OLED_128x64,
+                  false, false) == OLED_NOT_FOUND)
         return 1;
     
     oled_set_backbuffer(&oled, ucBackBuf);

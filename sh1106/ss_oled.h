@@ -1,21 +1,22 @@
 #ifndef __SS_OLED_H__
 #define __SS_OLED_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 
-typedef struct ssoleds
+typedef struct ssoled
 {
-    int file_i2c;
-    uint8_t oled_addr;
-    uint8_t oled_wrap;
-    uint8_t oled_flip;
-    uint8_t oled_res;
-    uint8_t *ucScreen;
-    uint8_t iCursorX;
-    uint8_t iCursorY;
+    int file;
+    uint8_t addr;
+    uint8_t wrap;
+    uint8_t flip;
+    uint8_t res;
+    uint8_t *screen;
+    uint8_t cursor_x;
+    uint8_t cursor_y;
     uint8_t oled_x;
     uint8_t oled_y;
-    int iScreenOffset;
+    int screen_offset;
 
 } SSOLED;
 
@@ -73,18 +74,18 @@ enum
 // Return value from oled_init()
 enum
 {
-    OLED_NOT_FOUND = -1, // no display found
-    OLED_SSD1306_3C,  // SSD1306 found at 0x3C
-    OLED_SSD1306_3D,  // SSD1306 found at 0x3D
-    OLED_SH1106_3C,   // SH1106 found at 0x3C
-    OLED_SH1106_3D,   // SH1106 found at 0x3D
-    OLED_SH1107_3C,  // SH1107
+    OLED_NOT_FOUND = -1,    // no display found
+    OLED_SSD1306_3C,        // SSD1306 found at 0x3C
+    OLED_SSD1306_3D,        // SSD1306 found at 0x3D
+    OLED_SH1106_3C,         // SH1106 found at 0x3C
+    OLED_SH1106_3D,         // SH1106 found at 0x3D
+    OLED_SH1107_3C,         // SH1107
     OLED_SH1107_3D
 };
 
 // Initializes the OLED controller into "page mode" on I2C
-int oled_init(SSOLED *pOLED, int iChannel, int iType, int iRes, int iAddr,
-             int bFlip, int bInvert);
+int oled_init(SSOLED *oled, int channel, int addr, int type, int res,
+              bool flip, bool invert);
 
 // Initialize an SPI version of the display
 void oled_spi_init(int iType, int iDC, int iCS, int iReset, int bFlip, int bInvert, int32_t iSpeed);
@@ -94,27 +95,27 @@ void oled_spi_init(int iType, int iDC, int iCS, int iReset, int bFlip, int bInve
 // embedded platforms like the ATmega series
 // Pass NULL to revoke the buffer. Make sure you provide a buffer
 // large enough for your display (e.g. 128x64 needs 1K - 1024 bytes)
-void oled_set_backbuffer(SSOLED *pOLED, uint8_t *pBuffer);
+void oled_set_backbuffer(SSOLED *oled, uint8_t *buffer);
 
 // Sets the brightness (0=off, 255=brightest)
-void oled_set_contrast(SSOLED *pOLED, unsigned char ucContrast);
+void oled_set_contrast(SSOLED *oled, unsigned char contrast);
 
 // Load a 128x64 1-bpp Windows bitmap
 // Pass the pointer to the beginning of the BMP file
 // First pass version assumes a full screen bitmap
-int oled_load_bmp(SSOLED *pOLED, uint8_t *pBMP, int bInvert, int bRender);
+int oled_load_bmp(SSOLED *oled, uint8_t *pBMP, int bInvert, int bRender);
 
 // Power up/down the display
 // useful for low power situations
-void oled_power(SSOLED *pOLED, uint8_t bOn);
+void oled_power(SSOLED *oled, bool on);
 
 // Set the current cursor position
 // The column represents the pixel column (0-127)
 // The row represents the text row (0-7)
-void oled_set_cursor(SSOLED *pOLED, int x, int y);
+void oled_set_cursor(SSOLED *oled, int x, int y);
 
 // Turn text wrap on or off for the oldWriteString() function
-void oled_set_textwrap(SSOLED *pOLED, int bWrap);
+void oled_set_textwrap(SSOLED *oled, int wrap);
 
 // Draw a string of normal (8x8), small (6x8) or large (16x32) characters
 // At the given col+row with the given scroll offset. The scroll offset allows you to
@@ -128,17 +129,17 @@ void oled_set_textwrap(SSOLED *pOLED, int bWrap);
 // be left "off screen" until set to a new position explicitly
 //
 //  Returns 0 for success, -1 for invalid parameter
-int oled_string_write(SSOLED *pOLED, int iScrollX, int x, int y, char *szMsg, int iSize, int bInvert, int bRender);
+int oled_string_write(SSOLED *oled, int iScrollX, int x, int y, char *szMsg, int iSize, int bInvert, int bRender);
 
 // Draw a string with a fractional scale in both dimensions
 // the scale is a 16-bit integer with and 8-bit fraction and 8-bit mantissa
 // To draw at 1x scale, set the scale factor to 256. To draw at 2x, use 512
 // The output must be drawn into a memory buffer, not directly to the display
-int oled_string_scaled(SSOLED *pOLED, int x, int y, char *szMsg, int iSize, int bInvert, int iXScale, int iYScale, int iRotation);
+int oled_string_scaled(SSOLED *oled, int x, int y, char *szMsg, int iSize, int bInvert, int iXScale, int iYScale, int iRotation);
 
 // Fill the frame buffer with a byte pattern
 // e.g. all off (0x00) or all on (0xff)
-void oled_fill(SSOLED *pOLED, unsigned char ucData, int bRender);
+void oled_fill(SSOLED *oled, unsigned char data, int render);
 
 // Set (or clear) an individual pixel
 // The local copy of the frame buffer is used to avoid
@@ -146,20 +147,20 @@ void oled_fill(SSOLED *pOLED, unsigned char ucData, int bRender);
 // (which isn't possible in most configurations)
 // This function needs the USE_BACKBUFFER macro to be defined
 // otherwise, new pixels will erase old pixels within the same byte
-int oled_set_pixel(SSOLED *pOLED, int x, int y, unsigned char ucColor, int bRender);
+int oled_set_pixel(SSOLED *oled, int x, int y, unsigned char ucColor, int bRender);
 
 // Dump an entire custom buffer to the display
 // useful for custom animation effects
-void oled_dump_buffer(SSOLED *pOLED, uint8_t *pBuffer);
+void oled_dump_buffer(SSOLED *oled, uint8_t *pBuffer);
 
 // Render a window of pixels from a provided buffer or the library's internal buffer
 // to the display. The row values refer to byte rows, not pixel rows due to the memory
 // layout of OLEDs. Pass a src pointer of NULL to use the internal backing buffer
 // returns 0 for success, -1 for invalid parameter
-int oled_draw_gfx(SSOLED *pOLED, uint8_t *pSrc, int iSrcCol, int iSrcRow, int iDestCol, int iDestRow, int iWidth, int iHeight, int iSrcPitch);
+int oled_draw_gfx(SSOLED *oled, uint8_t *pSrc, int iSrcCol, int iSrcRow, int iDestCol, int iDestRow, int iWidth, int iHeight, int iSrcPitch);
 
 // Draw a line between 2 points
-void oled_draw_line(SSOLED *pOLED, int x1, int y1, int x2, int y2, int bRender);
+void oled_draw_line(SSOLED *oled, int x1, int y1, int x2, int y2, int bRender);
 
 // Play a frame of animation data
 // The animation data is assumed to be encoded for a full frame of the display
@@ -167,12 +168,12 @@ void oled_draw_line(SSOLED *pOLED, int x1, int y1, int x2, int y2, int bRender);
 // it returns the pointer to the start of the next frame
 // Frame rate control is up to the calling program to manage
 // When it finishes the last frame, it will start again from the beginning
-uint8_t* oled_play_anim_frame(SSOLED *pOLED, uint8_t *pAnimation, uint8_t *pCurrent, int iLen);
+uint8_t* oled_play_anim_frame(SSOLED *oled, uint8_t *pAnimation, uint8_t *pCurrent, int iLen);
 
 // Scroll the internal buffer by 1 scanline (up/down)
 // width is in pixels, lines is group of 8 rows
 // Returns 0 for success, -1 for invalid parameter
-int oled_scroll_buffer(SSOLED *pOLED, int iStartCol, int iEndCol, int iStartRow, int iEndRow, int bUp);
+int oled_scroll_buffer(SSOLED *oled, int iStartCol, int iEndCol, int iStartRow, int iEndRow, int bUp);
 
 // Draw a sprite of any size in any position
 // If it goes beyond the left/right or top/bottom edges
@@ -182,7 +183,7 @@ int oled_scroll_buffer(SSOLED *pOLED, int iStartCol, int iEndCol, int iStartRow,
 // when a 1 is encountered in the source image.
 // e.g. when 0, the input bitmap acts like a mask to clear
 // the destination where bits are set.
-void oled_draw_sprite(SSOLED *pOLED, uint8_t *pSprite, int cx, int cy, int iPitch, int x, int y, uint8_t iPriority);
+void oled_draw_sprite(SSOLED *oled, uint8_t *pSprite, int cx, int cy, int iPitch, int x, int y, uint8_t iPriority);
 
 // Draw a 16x16 tile in any of 4 rotated positions
 // Assumes input image is laid out like "normal" graphics with
@@ -190,13 +191,13 @@ void oled_draw_sprite(SSOLED *pOLED, uint8_t *pSprite, int cx, int cy, int iPitc
 // On AVR, the source image is assumed to be in FLASH memory
 // The function can draw the tile on byte boundaries, so the x value
 // can be from 0 to 112 and y can be from 0 to 6
-void oled_draw_tile(SSOLED *pOLED, const uint8_t *pTile, int x, int y, int iRotation, int bInvert, int bRender);
+void oled_draw_tile(SSOLED *oled, const uint8_t *pTile, int x, int y, int iRotation, int bInvert, int bRender);
 
 // Draw an outline or filled ellipse
-void oled_ellipse(SSOLED *pOLED, int iCenterX, int iCenterY, int32_t iRadiusX, int32_t iRadiusY, uint8_t ucColor, uint8_t bFilled);
+void oled_ellipse(SSOLED *oled, int iCenterX, int iCenterY, int32_t iRadiusX, int32_t iRadiusY, uint8_t ucColor, uint8_t bFilled);
 
 // Draw an outline or filled rectangle
-void oled_rectangle(SSOLED *pOLED, int x1, int y1, int x2, int y2, uint8_t ucColor, uint8_t bFilled);
+void oled_rectangle(SSOLED *oled, int x1, int y1, int x2, int y2, uint8_t ucColor, uint8_t bFilled);
 
 #endif // __SS_OLED_H__
 

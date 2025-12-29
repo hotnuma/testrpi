@@ -9,9 +9,11 @@ PKGCONFIG =
 
 HEADERS += \
     global.h \
+    i2c_funcs.h \
     ss_oled.h \
 
 SOURCES = \
+    0temp.c \
     main.c \
     ss_oled.c
 
