@@ -103,11 +103,11 @@ int oled_init(SSOLED *oled, int channel, int addr,
     }
     
     // SH1106 is 128 centered in 132
-    if (type == OLED_SH1106_3C)
+    if (type == OLED_SH1106)
         oled->res = OLED_132x64;
 
-    if (oled->addr == 0x3d)
-        type++; // return the '3D' version of the type
+    // if (oled->addr == 0x3d)
+    //     type++;
 
     if (res == OLED_128x32 || res == OLED_96x16)
         _oled_write(oled, (unsigned char*) oled32_initbuf, sizeof(oled32_initbuf));

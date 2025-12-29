@@ -75,12 +75,9 @@ enum
 enum
 {
     OLED_NOT_FOUND = -1,    // no display found
-    OLED_SSD1306_3C,        // SSD1306 found at 0x3C
-    OLED_SSD1306_3D,        // SSD1306 found at 0x3D
-    OLED_SH1106_3C,         // SH1106 found at 0x3C
-    OLED_SH1106_3D,         // SH1106 found at 0x3D
-    OLED_SH1107_3C,         // SH1107
-    OLED_SH1107_3D
+    OLED_SSD1306,        // SSD1306 found at 0x3C
+    OLED_SH1106,         // SH1106 found at 0x3C
+    OLED_SH1107,         // SH1107
 };
 
 // Initializes the OLED controller into "page mode" on I2C
