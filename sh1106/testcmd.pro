@@ -10,6 +10,7 @@ PKGCONFIG =
 HEADERS += \
     global.h \
     i2c_funcs.h \
+    msleep.h \
     ss_oled.h \
 
 SOURCES = \

@@ -2,6 +2,7 @@
 // Written by Larry Bank
 
 #include "ss_oled.h"
+#include "msleep.h"
 #include <stdio.h>
 
 // data structure for oled object
@@ -16,15 +17,16 @@ int main()
         return 1;
     
     oled_set_backbuffer(&oled, ucBackBuf);
-    
+
     // fill with black
     oled_fill(&oled, 0, 1);
 
     oled_string_write(&oled, 0, 0, 0, "Line 1", FONT_16x16, false, true);
+    //msleep(1000);
+
     oled_string_write(&oled, 0, 0, 2, "Line 1", FONT_16x16, false, true);
     oled_string_write(&oled, 0, 0, 4, "Line 1", FONT_16x16, true, true);
     oled_string_write(&oled, 0, 0, 6, "12345678", FONT_16x16, false, true);
-    //oled_string_write(&oled, 0, 0, 1, "SS_OLED Library!", FONT_NORMAL, 0, 1);
     
     printf("Press ENTER to quit\n");
     getchar();

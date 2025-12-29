@@ -7,14 +7,14 @@
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
 
-int i2c_init(int channel)
+inline int i2c_init(int channel)
 {
     char filename[32];
     sprintf(filename, "/dev/i2c-%d", channel);
     return open(filename, O_RDWR);
 }
 
-bool i2c_test(int file, unsigned char addr)
+inline bool i2c_test(int file, unsigned char addr)
 {
     if (ioctl(file, I2C_SLAVE, addr) < 0)
         return false;
@@ -24,7 +24,7 @@ bool i2c_test(int file, unsigned char addr)
     return (read(file, &ucTemp, 1) >= 0);
 }
 
-bool i2c_read(int file, unsigned char addr, unsigned char *data, int len)
+inline bool i2c_read(int file, unsigned char addr, unsigned char *data, int len)
 {
     if (ioctl(file, I2C_SLAVE, addr) < 0)
         return false;
@@ -32,7 +32,7 @@ bool i2c_read(int file, unsigned char addr, unsigned char *data, int len)
     return (read(file, data, len) > 0);
 }
 
-bool i2c_write(int file, unsigned char addr, unsigned char *data, int len)
+inline bool i2c_write(int file, unsigned char addr, unsigned char *data, int len)
 {
     if (ioctl(file, I2C_SLAVE, addr) < 0)
         return false;
@@ -40,6 +40,5 @@ bool i2c_write(int file, unsigned char addr, unsigned char *data, int len)
     return (write(file, data, len) >= 0);
 }
 
-
-
 #endif // I2C_FUNCS_H
+
