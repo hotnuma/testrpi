@@ -7,16 +7,13 @@ PKGCONFIG =
 
 #PKGCONFIG += tinyc
 
-HEADERS += \
-    global.h \
-    i2c_funcs.h \
-    msleep.h \
-    ss_oled.h \
+HEADERS = \
+    mcp9808.h
 
 SOURCES = \
     0temp.c \
     main.c \
-    ss_oled.c
+    mcp9808.c
 
 DISTFILES = \
     install.sh \

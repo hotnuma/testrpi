@@ -2,6 +2,7 @@
 #define I2C_FUNCS_H
 
 #include <stdio.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>

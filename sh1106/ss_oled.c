@@ -18,9 +18,9 @@
 //
 
 #include "ss_oled.h"
-#include "i2c_funcs.h"
 #include "global.h"
 
+#include <i2c_funcs.h>
 #include <stdlib.h>
 #include <string.h>
 

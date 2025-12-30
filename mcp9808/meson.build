@@ -11,7 +11,6 @@ c_args = [
     '-Wextra',
     '-O2',
     '-D_GNU_SOURCE',
-    '-D_LINUX_',
 ]
 
 app_includes = [
@@ -19,14 +18,14 @@ app_includes = [
 ]
 
 app_sources = [
-    'ss_oled.c',
+    'mcp9808.c',
     'main.c',
 ]
 
 executable(
     meson.project_name(),
     c_args: c_args,
-    include_directories: app_includes,
+    include_directories : app_includes,
     sources: app_sources,
     install: false,
 )
