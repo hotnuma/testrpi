@@ -3,25 +3,25 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <unistd.h>
 
 typedef struct ssoled
 {
     int file;
     uint8_t addr;
-    uint8_t wrap;
     uint8_t flip;
     uint8_t res;
+    bool wrap;
+
     uint8_t *screen;
     uint8_t cursor_x;
     uint8_t cursor_y;
     uint8_t oled_x;
     uint8_t oled_y;
+
     int screen_offset;
 
 } SSOLED;
-
-// These are defined the same in my SPI_LCD library
-#ifndef SPI_LCD_H
 
 // 4 possible font sizes: 8x8, 16x32, 6x8, 16x16 (stretched from 8x8)
 enum
@@ -33,6 +33,11 @@ enum
     FONT_16x32
 };
 
+#define FONT_NORMAL FONT_8x8
+#define FONT_SMALL FONT_6x8
+#define FONT_LARGE FONT_16x32
+#define FONT_STRETCHED FONT_16x16
+
 // 4 possible rotation angles for oledScaledString()
 enum
 {
@@ -41,12 +46,6 @@ enum
     ROT_180,
     ROT_270
 };
-
-#define FONT_NORMAL FONT_8x8
-#define FONT_SMALL FONT_6x8
-#define FONT_LARGE FONT_16x32
-#define FONT_STRETCHED FONT_16x16
-#endif
 
 // OLED type for init function
 enum
@@ -60,7 +59,7 @@ enum
     OLED_72x40
 };
 
-// Rotation and flip angles to draw tiles
+// rotation and flip angles to draw tiles
 enum
 {
     ANGLE_0=0,
@@ -71,36 +70,37 @@ enum
     ANGLE_FLIPY
 };
 
-// Return value from oled_init()
+// return value from oled_init()
 enum
 {
     OLED_NOT_FOUND = -1,    // no display found
-    OLED_SSD1306,        // SSD1306 found at 0x3C
-    OLED_SH1106,         // SH1106 found at 0x3C
-    OLED_SH1107,         // SH1107
+    OLED_SSD1306,           // SSD1306 found at 0x3C
+    OLED_SH1106,            // SH1106 found at 0x3C
+    OLED_SH1107,            // SH1107
 };
 
-// Initializes the OLED controller into "page mode" on I2C
+// initializes the OLED controller into "page mode" on I2C
 int oled_init(SSOLED *oled, int channel, int addr, int type, int res,
               bool flip, bool invert);
 
-// Initialize an SPI version of the display
-void oled_spi_init(int iType, int iDC, int iCS, int iReset, int bFlip, int bInvert, int32_t iSpeed);
+inline void oled_write(SSOLED *oled, unsigned char *data, int len)
+{
+    write(oled->file, data, len);
+}
 
-// Provide or revoke a back buffer for your OLED graphics
-// This allows you to manage the RAM used by ss_oled on tiny
+// provide or revoke a back buffer for your OLED graphics,
+// this allows you to manage the RAM used by ss_oled on tiny
 // embedded platforms like the ATmega series
-// Pass NULL to revoke the buffer. Make sure you provide a buffer
+// pass NULL to revoke the buffer. make sure you provide a buffer
 // large enough for your display (e.g. 128x64 needs 1K - 1024 bytes)
 void oled_set_backbuffer(SSOLED *oled, uint8_t *buffer);
 
-// Sets the brightness (0=off, 255=brightest)
-void oled_set_contrast(SSOLED *oled, unsigned char contrast);
+// fill the frame buffer with a byte pattern
+// e.g. all off (0x00) or all on (0xff)
+void oled_fill(SSOLED *oled, unsigned char data, int render);
 
-// Load a 128x64 1-bpp Windows bitmap
-// Pass the pointer to the beginning of the BMP file
-// First pass version assumes a full screen bitmap
-int oled_load_bmp(SSOLED *oled, uint8_t *pBMP, int bInvert, int bRender);
+// sets the brightness (0=off, 255=brightest)
+void oled_set_contrast(SSOLED *oled, unsigned char contrast);
 
 // Power up/down the display
 // useful for low power situations
@@ -110,9 +110,6 @@ void oled_power(SSOLED *oled, bool on);
 // The column represents the pixel column (0-127)
 // The row represents the text row (0-7)
 void oled_set_cursor(SSOLED *oled, int x, int y);
-
-// Turn text wrap on or off for the oldWriteString() function
-void oled_set_textwrap(SSOLED *oled, int wrap);
 
 // Draw a string of normal (8x8), small (6x8) or large (16x32) characters
 // At the given col+row with the given scroll offset. The scroll offset allows you to
@@ -126,17 +123,26 @@ void oled_set_textwrap(SSOLED *oled, int wrap);
 // be left "off screen" until set to a new position explicitly
 //
 //  Returns 0 for success, -1 for invalid parameter
-int oled_string_write(SSOLED *oled, int iScrollX, int x, int y, char *szMsg, int iSize, int bInvert, int bRender);
+int oled_string_write(SSOLED *oled, int scroll, int x, int y,
+                      char *msg, int size, bool invert, bool render);
+
+#if 0
+// Initialize an SPI version of the display
+void oled_spi_init(int iType, int iDC, int iCS, int iReset, int bFlip, int bInvert, int32_t iSpeed);
+
+// Load a 128x64 1-bpp Windows bitmap
+// Pass the pointer to the beginning of the BMP file
+// First pass version assumes a full screen bitmap
+int oled_load_bmp(SSOLED *oled, uint8_t *pBMP, int bInvert, int bRender);
+
+// Turn text wrap on or off for the oldWriteString() function
+void oled_set_textwrap(SSOLED *oled, int wrap);
 
 // Draw a string with a fractional scale in both dimensions
 // the scale is a 16-bit integer with and 8-bit fraction and 8-bit mantissa
 // To draw at 1x scale, set the scale factor to 256. To draw at 2x, use 512
 // The output must be drawn into a memory buffer, not directly to the display
 int oled_string_scaled(SSOLED *oled, int x, int y, char *szMsg, int iSize, int bInvert, int iXScale, int iYScale, int iRotation);
-
-// Fill the frame buffer with a byte pattern
-// e.g. all off (0x00) or all on (0xff)
-void oled_fill(SSOLED *oled, unsigned char data, int render);
 
 // Set (or clear) an individual pixel
 // The local copy of the frame buffer is used to avoid
@@ -195,6 +201,8 @@ void oled_ellipse(SSOLED *oled, int iCenterX, int iCenterY, int32_t iRadiusX, in
 
 // Draw an outline or filled rectangle
 void oled_rectangle(SSOLED *oled, int x1, int y1, int x2, int y2, uint8_t ucColor, uint8_t bFilled);
+
+#endif
 
 #endif // __SS_OLED_H__
 
