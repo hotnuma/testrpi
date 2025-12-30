@@ -13,7 +13,7 @@ typedef struct ssoled
     uint8_t res;
     bool wrap;
 
-    uint8_t *screen;
+    uint8_t *buffer;
     uint8_t cursor_x;
     uint8_t cursor_y;
     uint8_t oled_x;
@@ -80,8 +80,9 @@ enum
 };
 
 // initializes the OLED controller into "page mode" on I2C
-int oled_init(SSOLED *oled, int channel, int addr, int type, int res,
-              bool flip, bool invert);
+bool oled_init(SSOLED *oled, int channel, int addr,
+               int type, int res,
+               bool flip, bool invert);
 
 inline void oled_write(SSOLED *oled, unsigned char *data, int len)
 {

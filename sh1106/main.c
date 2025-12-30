@@ -2,21 +2,22 @@
 // Written by Larry Bank
 
 #include "ss_oled.h"
-#include "msleep.h"
+#include <msleep.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // data structure for oled object
 SSOLED oled;
-unsigned char ucBackBuf[1024];
+unsigned char buffer[1024];
 
 int main()
 {
-    if (oled_init(&oled, 1, 0x3c,
-                  OLED_SH1106, OLED_128x64,
-                  false, false) == OLED_NOT_FOUND)
-        return 1;
+    if (!oled_init(&oled, 1, 0x3c,
+                   OLED_SH1106, OLED_128x64,
+                   false, false))
+        return EXIT_FAILURE;
     
-    oled_set_backbuffer(&oled, ucBackBuf);
+    oled_set_backbuffer(&oled, buffer);
 
     // fill with black
     oled_fill(&oled, 0, 1);
@@ -32,6 +33,6 @@ int main()
     getchar();
     oled_power(&oled, 0);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

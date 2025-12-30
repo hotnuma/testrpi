@@ -1,6 +1,6 @@
 #include "mcp9808.h"
 
-bool mcp9808_init(MCP9808 *mcp9808, int channel, int addr)
+bool mcp9808_init(MCP9808 *mcp9808, int channel, uint8_t addr)
 {
     mcp9808->addr = addr;
     mcp9808->file = i2c_init(channel, addr);

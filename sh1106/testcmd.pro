@@ -2,21 +2,19 @@ TEMPLATE = app
 TARGET = testcmd
 CONFIG = c99 link_pkgconfig
 DEFINES = _GNU_SOURCE bool=BOOL true=TRUE false=FALSE _LINUX_
-INCLUDEPATH = ../i2c
+INCLUDEPATH =
 PKGCONFIG =
 
-#PKGCONFIG += tinyc
+PKGCONFIG += tinyc
 
-HEADERS += \
+HEADERS = \
     global.h \
-    i2c_funcs.h \
-    msleep.h \
     ss_oled.h \
 
 SOURCES = \
     0temp.c \
     main.c \
-    ss_oled.c
+    ss_oled.c \
 
 DISTFILES = \
     install.sh \

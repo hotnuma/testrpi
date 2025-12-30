@@ -13,8 +13,8 @@ c_args = [
     '-D_GNU_SOURCE',
 ]
 
-app_includes = [
-    '../i2c',
+app_deps = [
+    dependency('tinyc'),
 ]
 
 app_sources = [
@@ -25,7 +25,7 @@ app_sources = [
 executable(
     meson.project_name(),
     c_args: c_args,
-    include_directories : app_includes,
+    dependencies: app_deps,
     sources: app_sources,
     install: false,
 )

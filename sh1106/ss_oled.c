@@ -20,7 +20,7 @@
 #include "ss_oled.h"
 #include "global.h"
 
-#include <i2c_funcs.h>
+#include <libi2c.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -78,24 +78,22 @@ static void _oled_write_command2(SSOLED *oled, unsigned char c, unsigned char d)
     oled_write(oled, buf, 3);
 }
 
-int oled_init(SSOLED *oled, int channel, int addr,
-              int type, int res,
-              bool flip, bool invert)
+bool oled_init(SSOLED *oled, int channel, int addr,
+               int type, int res,
+               bool flip, bool invert)
 {
-    unsigned char uc[4];
-
-    oled->screen = NULL; // reset backbuffer; user must provide one later
+    oled->buffer = NULL;
     oled->res = res;
     oled->flip = flip;
-    oled->wrap = false; // default - disable text wrap
+    oled->wrap = false;
+
+    oled->addr = addr;
 
     oled->file = i2c_init(channel, addr);
 
     if (oled->file == -1)
-        return OLED_NOT_FOUND;
+        return false;
 
-    oled->addr = addr;
-    
     // SH1106 is 128 centered in 132
     if (type == OLED_SH1106)
         oled->res = OLED_132x64;
@@ -109,6 +107,8 @@ int oled_init(SSOLED *oled, int channel, int addr,
     else // 132x64, 128x64 and 64x32
         oled_write(oled, (unsigned char*) oled64_initbuf, sizeof(oled64_initbuf));
     
+    unsigned char uc[4];
+
     if (invert)
     {
         uc[0] = 0;
@@ -161,12 +161,12 @@ int oled_init(SSOLED *oled, int channel, int addr,
         oled->oled_y = 64;
     }
     
-    return type;
+    return true;
 }
 
 void oled_set_backbuffer(SSOLED *oled, uint8_t *buffer)
 {
-    oled->screen = buffer;
+    oled->buffer = buffer;
 }
 
 void oled_fill(SSOLED *oled, unsigned char data, int render)
@@ -196,8 +196,8 @@ void oled_fill(SSOLED *oled, unsigned char data, int render)
             _oled_write_datablock(oled, temp, 8, render);
     }
 
-    if (oled->screen)
-        memset(oled->screen, data, (oled->oled_x * oled->oled_y) / 8);
+    if (oled->buffer)
+        memset(oled->buffer, data, (oled->oled_x * oled->oled_y) / 8);
 }
 
 static void _oled_set_position(SSOLED *oled, int x, int y, bool render)
@@ -266,9 +266,9 @@ static void _oled_write_datablock(SSOLED *oled, unsigned char *buffer, int len, 
     }
 
     // keep a copy in local buffer
-    if (oled->screen)
+    if (oled->buffer)
     {
-        memcpy(&oled->screen[oled->screen_offset], buffer, len);
+        memcpy(&oled->buffer[oled->screen_offset], buffer, len);
         oled->screen_offset += len;
 
         // we use a fixed stride of 128 no matter what the display size
