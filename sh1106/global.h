@@ -2,9 +2,6 @@
 #define GLOBAL_H
 
 #define PROGMEM
-#define false 0
-#define true 1
-#define memcpy_P memcpy
 
 // 5x7 font (in 6x8 cell)
 const uint8_t ucSmallFont[] PROGMEM = {
