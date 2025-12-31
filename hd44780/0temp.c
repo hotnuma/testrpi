@@ -324,6 +324,52 @@ void signal_callback_handler(int signum)
         exit(signum);
 }
 
+
+/*!
+        @brief Switch on the I2C
+        @note Start I2C operations.
+        @return error for failure to init a I2C bus
+                -# rdlib::Success
+                -# rdlib::I2CbeginFail
+*/
+int hd44780_LCD_I2C_ON(HD44780 *hd44780)
+{
+    int I2COpenHandle = 0;
+
+    I2COpenHandle = Display_RDL_I2C_OPEN(_LCDI2CDevice, _LCDI2CAddress, _LCDI2CFlags);
+    if (I2COpenHandle < 0 )
+    {
+    fprintf(stderr, "Error: LCD_I2C_ON: Can't open I2C (%s) \n", lguErrorText(I2COpenHandle));
+    return rdlib::I2CbeginFail;
+    }
+    else
+    {
+    _LCDI2CHandle = I2COpenHandle;
+    return rdlib::Success;
+    }
+}
+
+
+/*!
+        @brief End I2C operations
+        @return error for failure to close a I2C bus device
+                -# rdlib::Success
+                -# rdlib::I2CcloseFail
+*/
+int hd44780_LCD_I2C_OFF(HD44780 *hd44780)
+{
+    int I2CCloseHandleStatus = 0;
+
+    I2CCloseHandleStatus = Display_RDL_I2C_CLOSE(_LCDI2CHandle);
+    if (I2CCloseHandleStatus < 0 )
+    {
+    fprintf(stderr,  "Error:  LCD_I2C_OFF : Can't Close I2C (%s) \n", lguErrorText(I2CCloseHandleStatus));
+    return rdlib::I2CcloseFail;
+    }
+    return rdlib::Success;
+}
+
+
 #endif
 
 

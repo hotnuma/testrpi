@@ -4,40 +4,29 @@
 
 #include <hd44780.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <msleep.h>
 
 int main()
 {
     HD44780 hd44780;
 
-    if (!hd44780_init(&hd44780, 1, 0x27, 16, 2))
-        return EXIT_FAILURE;
-
-    // if (!myLCD.LCD_I2C_ON())
-    //     return EXIT_FAILURE;
-
     msleep(500);
 
-    // if (myLCD.LCDCheckConnection() < 0)// check on bus  ( Note optional)
-    // {
-    //     std::cout << "Error 1202: LCD not on bus?" << std::endl;
-    //     return false;
-    // }else {
-    //     std::cout << "LCDCheckConnection passed : LCD detected on the I2C bus" << std::endl;
-    // }
+    if (!hd44780_init(&hd44780, 1, 0x27, 16, 2, LCDCursorTypeOn))
+        return EXIT_FAILURE;
 
-    // myLCD.LCDInit(myLCD.LCDCursorTypeOn);
-    // myLCD.LCDClearScreen();
-    // myLCD.LCDBackLightSet(true);
+    hd44780_clear_screen(&hd44780);
+    hd44780_set_backlight(&hd44780, true);
 
-    //        // Print out flag status ( Note optional)
-    // std::cout << "Backlight status is : " << (myLCD.LCDBackLightGet() ? "On" : "Off") << std::endl ;
-    // std::cout << "I2C Debug Error : " << myLCD.LCDI2CErrorGet() << std::endl; // Print I2C error flag
-    // std::cout << "I2C Error Timeout mS : " << myLCD.LCDI2CErrorTimeoutGet() << std::endl; // Print I2C error Timeout
-    // std::cout << "I2C Error retry attempts counts: " << +myLCD.LCDI2CErrorRetryNumGet() << std::endl; // Print I2C error retry count
-    // std::cout << "Debug enabled : " << (rdlib_config::isDebugEnabled() ? "On" : "Off") << std::endl ;
+    hd44780_goto(&hd44780, LCDLineNumberOne, 0);
+    hd44780_write_string(&hd44780, "bla");
+    hd44780_goto(&hd44780, LCDLineNumberTwo , 0);
+    hd44780_write_string(&hd44780, "blie");
+    hd44780_write_char(&hd44780, '!');
 
-    // helloWorld();
+    msleep(1000);
+
     // cursorMoveTest();
     // scrollTest();
     // gotoTest();
@@ -51,7 +40,11 @@ int main()
     // backLightTest();
     // ClockDemo(DISPLAY_CLOCK);
 
-    // endTest();
+    printf("Press ENTER to quit\n");
+    getchar();
+
+    hd44780_LCDDisplayON(&hd44780, false);
+    hd44780_close(&hd44780);
 
     return EXIT_SUCCESS;
 }
