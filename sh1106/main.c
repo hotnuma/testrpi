@@ -6,12 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// data structure for oled object
-SSOLED oled;
-unsigned char buffer[1024];
-
 int main()
 {
+    SSOLED oled;
+    unsigned char buffer[1024];
+
     if (!oled_init(&oled, 1, 0x3c,
                    OLED_SH1106, OLED_128x64,
                    false, false))
