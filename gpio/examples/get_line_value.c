@@ -1,9 +1,8 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include <gpiod.h>
+#include <libgpio.h>
 #include <errno.h>
 #include <string.h>
 
@@ -12,10 +11,7 @@ static struct gpiod_line_request *chip_request_input(int channel,
                                                      unsigned int offset,
                                                      const char *consumer)
 {
-    char chip_path[32];
-    sprintf(chip_path, "/dev/gpiochip%d", channel);
-
-    struct gpiod_chip *chip = gpiod_chip_open(chip_path);
+    struct gpiod_chip *chip = chip_open(channel);
     if (!chip)
         return NULL;
 

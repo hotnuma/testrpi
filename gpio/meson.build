@@ -11,7 +11,6 @@ c_args = [
     '-Wextra',
     '-O2',
     '-D_GNU_SOURCE',
-    '-D_LINUX_',
 ]
 
 app_deps = [

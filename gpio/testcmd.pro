@@ -9,6 +9,7 @@ PKGCONFIG += libgpiod
 
 HEADERS = \
     global.h \
+    libgpio.h \
     ss_oled.h \
 
 SOURCES = \
