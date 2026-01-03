@@ -15,6 +15,7 @@ c_args = [
 
 app_deps = [
     dependency('libgpiod'),
+    dependency('tinychip'),
 ]
 
 app_sources = [
