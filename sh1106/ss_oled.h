@@ -127,7 +127,6 @@ void oled_set_cursor(SSOLED *oled, int x, int y);
 int oled_string_write(SSOLED *oled, int scroll, int x, int y,
                       char *msg, int size, bool invert, bool render);
 
-#if 0
 // Initialize an SPI version of the display
 void oled_spi_init(int iType, int iDC, int iCS, int iReset, int bFlip, int bInvert, int32_t iSpeed);
 
@@ -202,8 +201,6 @@ void oled_ellipse(SSOLED *oled, int iCenterX, int iCenterY, int32_t iRadiusX, in
 
 // Draw an outline or filled rectangle
 void oled_rectangle(SSOLED *oled, int x1, int y1, int x2, int y2, uint8_t ucColor, uint8_t bFilled);
-
-#endif
 
 #endif // __SS_OLED_H__
 
