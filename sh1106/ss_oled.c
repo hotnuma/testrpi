@@ -311,7 +311,7 @@ void oled_set_textwrap(SSOLED *oled, int wrap)
 int oled_string_write(SSOLED *oled, int scroll, int x, int y,
                       char *msg, int size, bool invert, bool render)
 {
-    // draw a string of normal (8x8), small (6x8) or large (16x32) characters
+    // draw a string of small (6x8), normal (8x8) or large (16x32) characters
 
     if (x == -1 || y == -1)
     {
@@ -326,54 +326,108 @@ int oled_string_write(SSOLED *oled, int scroll, int x, int y,
         oled->cursor_y = y;
     }
 
+    // can't draw off the display
     if ((oled->cursor_x >= oled->oled_x) || (oled->cursor_y >= (oled->oled_y / 8)))
-        return -1; // can't draw off the display
+        return -1;
 
     _oled_set_position(oled, oled->cursor_x, oled->cursor_y, render);
 
     unsigned char c;
-    int font_off;
-    unsigned char temp[40];
-    int len;
     unsigned char *s;
 
-    // 8x8 font
-    if (size == FONT_8x8)
+    unsigned char temp[40];
+    int numbytes;
+    int byte_pos;
+
+    // small font
+    if (size == FONT_6x8)
+    {
+        int i = 0;
+        int font_skip = scroll % 6;
+
+        while (msg[i] != 0
+               && oled->cursor_x < oled->oled_x
+               && oled->cursor_y < (oled->oled_y / 8))
+        {
+            // if characters are visible
+            if (scroll < 6)
+            {
+                c = msg[i] - 32;
+                byte_pos = (int) c * 5;
+
+                // copy one char into the temp buffer
+                temp[0] = 0;
+                memcpy(&temp[1], &ucSmallFont[byte_pos], 5);
+
+                if (invert)
+                    _invert_bytes(temp, 6);
+
+                numbytes = 6 - font_skip;
+
+                // clip right edge
+                if (oled->cursor_x + numbytes > oled->oled_x)
+                    numbytes = oled->oled_x - oled->cursor_x;
+
+                // write character pattern
+                _oled_write_datablock(oled, &temp[font_skip], numbytes, render);
+
+                oled->cursor_x += numbytes;
+                font_skip = 0;
+
+                // word wrap enabled?
+                if (oled->wrap && oled->cursor_x >= oled->oled_x - 5)
+                {
+                    // start at the beginning of the next line
+                    oled->cursor_x = 0;
+                    oled->cursor_y++;
+
+                    _oled_set_position(oled, oled->cursor_x, oled->cursor_y, render);
+                }
+            }
+
+            scroll -= 6;
+            ++i;
+        }
+
+        return 0;
+    }
+
+    // normal font
+    else if (size == FONT_8x8)
     {
         int i = 0;
         int font_skip = scroll & 7;
 
-        while ((oled->cursor_x < oled->oled_x)
-               && (msg[i] != 0)
+        while ((msg[i] != 0)
+               && (oled->cursor_x < oled->oled_x)
                && (oled->cursor_y < (oled->oled_y / 8)))
         {
             // only display visible characters
             if (scroll < 8)
             {
-                c = (unsigned char) msg[i];
+                c = msg[i] - 32;
+                byte_pos = (int) c * 7;
 
-                font_off = (int)(c-32) * 7;
-
-                // we can't directly use the pointer to FLASH memory, so copy to a local buffer
+                // copy one char into the temp buffer
                 temp[0] = 0;
-                memcpy(&temp[1], &ucFont[font_off], 7);
+                memcpy(&temp[1], &ucFont[byte_pos], 7);
 
                 if (invert)
                     _invert_bytes(temp, 8);
 
-                len = 8 - font_skip;
+                numbytes = 8 - font_skip;
 
                 // clip right edge
-                if (oled->cursor_x + len > oled->oled_x)
-                    len = oled->oled_x - oled->cursor_x;
+                if (oled->cursor_x + numbytes > oled->oled_x)
+                    numbytes = oled->oled_x - oled->cursor_x;
 
                 // write character pattern
-                _oled_write_datablock(oled, &temp[font_skip], len, render);
+                _oled_write_datablock(oled, &temp[font_skip], numbytes, render);
 
-                oled->cursor_x += len;
+                oled->cursor_x += numbytes;
 
                 // word wrap ?
-                if (oled->wrap && oled->cursor_x >= (oled->oled_x-7))
+                if (oled->wrap && oled->cursor_x >= (oled->oled_x - 7))
                 {
                     // start at the beginning of the next line
                     oled->cursor_x = 0;
@@ -393,51 +447,79 @@ int oled_string_write(SSOLED *oled, int scroll, int x, int y,
         return 0;
     }
 
-    else if (size == FONT_16x32) // 16x32 font
+    // big font
+    else if (size == FONT_16x32)
     {
         int i = 0;
         int font_skip = scroll & 15;
 
-        while (oled->cursor_x < oled->oled_x
-               && oled->cursor_y < (oled->oled_y / 8) - 3
-               && msg[i] != 0)
+        while (msg[i] != 0
+               && oled->cursor_x < oled->oled_x
+               && oled->cursor_y < (oled->oled_y / 8) - 3)
         {
             // if characters are visible
             if (scroll < 16)
             {
-                s = (unsigned char *)&ucBigFont[(unsigned char)(msg[i]-32)*64];
-                len = 16 - font_skip;
-                if (oled->cursor_x + len > oled->oled_x) // clip right edge
-                    len = oled->oled_x - oled->cursor_x;
-                // we can't directly use the pointer to FLASH memory, so copy to a local buffer
+                s = (unsigned char*) &ucBigFont[(unsigned char) (msg[i] - 32) * 64];
+
+                numbytes = 16 - font_skip;
+
+                // clip right edge
+                if (oled->cursor_x + numbytes > oled->oled_x)
+                    numbytes = oled->oled_x - oled->cursor_x;
+
+                // write 16 bytes
                 _oled_set_position(oled, oled->cursor_x, oled->cursor_y, render);
                 memcpy(temp, s, 16);
-                if (invert) _invert_bytes(temp, 16);
-                _oled_write_datablock(oled, &temp[font_skip], len, render); // write character pattern
-                _oled_set_position(oled, oled->cursor_x, oled->cursor_y+1, render);
-                memcpy(temp, s+16, 16);
-                if (invert) _invert_bytes(temp, 16);
-                _oled_write_datablock(oled, &temp[font_skip], len, render); // write character pattern
+
+                if (invert)
+                    _invert_bytes(temp, 16);
+
+                _oled_write_datablock(oled, &temp[font_skip], numbytes, render);
+
+                // write 16 bytes
+                _oled_set_position(oled, oled->cursor_x, oled->cursor_y + 1, render);
+                memcpy(temp, s + 16, 16);
+
+                if (invert)
+                    _invert_bytes(temp, 16);
+
+                _oled_write_datablock(oled, &temp[font_skip], numbytes, render);
+
+                // write 16 bytes
                 if (oled->cursor_y <= 5)
                 {
-                    _oled_set_position(oled, oled->cursor_x, oled->cursor_y+2, render);
-                    memcpy(temp, s+32, 16);
-                    if (invert) _invert_bytes(temp, 16);
-                    _oled_write_datablock(oled, &temp[font_skip], len, render); // write character pattern
+                    _oled_set_position(oled, oled->cursor_x, oled->cursor_y + 2, render);
+                    memcpy(temp, s + 32, 16);
+
+                    if (invert)
+                        _invert_bytes(temp, 16);
+
+                    _oled_write_datablock(oled, &temp[font_skip], numbytes, render);
                 }
+
+                // write 16 bytes
                 if (oled->cursor_y <= 4)
                 {
-                    _oled_set_position(oled, oled->cursor_x, oled->cursor_y+3, render);
-                    memcpy(temp, s+48, 16);
-                    if (invert) _invert_bytes(temp, 16);
-                    _oled_write_datablock(oled, &temp[font_skip], len, render); // write character pattern
+                    _oled_set_position(oled, oled->cursor_x, oled->cursor_y + 3, render);
+                    memcpy(temp, s + 48, 16);
+
+                    if (invert)
+                        _invert_bytes(temp, 16);
+
+                    _oled_write_datablock(oled, &temp[font_skip], numbytes, render);
                 }
-                oled->cursor_x += len;
-                if (oled->cursor_x >= oled->oled_x-15 && oled->wrap) // word wrap enabled?
+
+                oled->cursor_x += numbytes;
+
+                // word wrap enabled?
+                if (oled->cursor_x >= oled->oled_x-15 && oled->wrap)
                 {
-                    oled->cursor_x = 0; // start at the beginning of the next line
-                    oled->cursor_y+=4;
+                    // start at the beginning of the next line
+                    oled->cursor_x = 0;
+                    oled->cursor_y += 4;
                 }
+
                 font_skip = 0;
             }
 
@@ -537,14 +619,14 @@ int oled_string_write(SSOLED *oled, int scroll, int x, int y,
                         ucMask <<= 1; ucMask2 <<= 1;
                     }
                 }
-                len = 12 - font_skip;
-                if (oled->cursor_x + len > oled->oled_x) // clip right edge
-                    len = oled->oled_x - oled->cursor_x;
+                numbytes = 12 - font_skip;
+                if (oled->cursor_x + numbytes > oled->oled_x) // clip right edge
+                    numbytes = oled->oled_x - oled->cursor_x;
                 _oled_set_position(oled, oled->cursor_x, oled->cursor_y, render);
-                _oled_write_datablock(oled, &temp[6+font_skip], len, render);
+                _oled_write_datablock(oled, &temp[6+font_skip], numbytes, render);
                 _oled_set_position(oled, oled->cursor_x, oled->cursor_y+1, render);
-                _oled_write_datablock(oled, &temp[18+font_skip], len, render);
-                oled->cursor_x += len;
+                _oled_write_datablock(oled, &temp[18+font_skip], numbytes, render);
+                oled->cursor_x += numbytes;
                 if (oled->cursor_x >= oled->oled_x-11 && oled->wrap) // word wrap enabled?
                 {
                     oled->cursor_x = 0; // start at the beginning of the next line
@@ -606,14 +688,14 @@ int oled_string_write(SSOLED *oled, int scroll, int x, int y,
                     pDest[16] = uc2;
                     pDest[17] = uc2;
                 }
-                len = 16 - font_skip;
-                if (oled->cursor_x + len > oled->oled_x) // clip right edge
-                    len = oled->oled_x - oled->cursor_x;
+                numbytes = 16 - font_skip;
+                if (oled->cursor_x + numbytes > oled->oled_x) // clip right edge
+                    numbytes = oled->oled_x - oled->cursor_x;
                 _oled_set_position(oled, oled->cursor_x, oled->cursor_y, render);
-                _oled_write_datablock(oled, &temp[8+font_skip], len, render);
+                _oled_write_datablock(oled, &temp[8+font_skip], numbytes, render);
                 _oled_set_position(oled, oled->cursor_x, oled->cursor_y+1, render);
-                _oled_write_datablock(oled, &temp[24+font_skip], len, render);
-                oled->cursor_x += len;
+                _oled_write_datablock(oled, &temp[24+font_skip], numbytes, render);
+                oled->cursor_x += numbytes;
                 if (oled->cursor_x >= oled->oled_x-15 && oled->wrap) // word wrap enabled?
                 {
                     oled->cursor_x = 0; // start at the beginning of the next line
@@ -624,44 +706,6 @@ int oled_string_write(SSOLED *oled, int scroll, int x, int y,
             }
 
             scroll -= 16;
-            ++i;
-        }
-
-        return 0;
-    }
-
-    else if (size == FONT_6x8)
-    {
-        int i = 0;
-        int font_skip = scroll % 6;
-
-        while (oled->cursor_x < oled->oled_x
-               && oled->cursor_y < (oled->oled_y / 8) && msg[i] != 0)
-        {
-            // if characters are visible
-            if (scroll < 6)
-            {
-                c = msg[i] - 32;
-                // we can't directly use the pointer to FLASH memory, so copy to a local buffer
-                temp[0] = 0;
-                memcpy(&temp[1], &ucSmallFont[(int)c*5], 5);
-                if (invert) _invert_bytes(temp, 6);
-                len = 6 - font_skip;
-                if (oled->cursor_x + len > oled->oled_x) // clip right edge
-                    len = oled->oled_x - oled->cursor_x;
-                _oled_write_datablock(oled, &temp[font_skip], len, render); // write character pattern
-                //         oledCachedWrite(ucTemp, 6);
-                oled->cursor_x += len;
-                font_skip = 0;
-                if (oled->cursor_x >= oled->oled_x-5 && oled->wrap) // word wrap enabled?
-                {
-                    oled->cursor_x = 0; // start at the beginning of the next line
-                    oled->cursor_y++;
-                    _oled_set_position(oled, oled->cursor_x, oled->cursor_y, render);
-                }
-            }
-
-            scroll -= 6;
             ++i;
         }
 

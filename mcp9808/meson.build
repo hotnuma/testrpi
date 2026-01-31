@@ -14,7 +14,7 @@ c_args = [
 ]
 
 app_deps = [
-    dependency('tinyc'),
+    dependency('tinychip'),
 ]
 
 app_sources = [

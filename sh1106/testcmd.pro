@@ -5,7 +5,7 @@ DEFINES = _GNU_SOURCE bool=BOOL true=TRUE false=FALSE _LINUX_
 INCLUDEPATH =
 PKGCONFIG =
 
-PKGCONFIG += tinyc
+PKGCONFIG += tinychip
 
 HEADERS = \
     global.h \
